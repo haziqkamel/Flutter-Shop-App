@@ -1,6 +1,9 @@
-# flutter_shop_app
+# flutter_shop_app (WIP)
 
-A new Flutter project.
+- Implementing local persistence data storage
+- Networking http/https request
+- User authentication
+- Flutter animations
 
 ## Getting Started
 
