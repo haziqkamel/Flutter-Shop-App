@@ -15,6 +15,7 @@ class ProductItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final productItem = Provider.of<Product>(context, listen: false);
     final cartItem = Provider.of<Cart>(context, listen: false);
+    final scaffold = Scaffold.of(context);
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: GridTile(
@@ -31,15 +32,24 @@ class ProductItem extends StatelessWidget {
           ),
         ),
         footer: GridTileBar(
-          backgroundColor: Colors.black87,
+          backgroundColor: Colors.black26,
           leading: Consumer<Product>(
             builder: (ctx, productItem, _) => IconButton(
               color: Theme.of(context).accentColor,
               icon: Icon(
                 productItem.isFavorite ? Icons.favorite : Icons.favorite_border,
               ),
-              onPressed: () {
-                productItem.toogleFavStatus();
+              onPressed: () async {
+                try {
+                  await Provider.of<Product>(context, listen: false)
+                      .toogleFavStatus();
+                } catch (error) {
+                  scaffold.showSnackBar(SnackBar(
+                    content:
+                        Text('Unable to set Favorite, something is wrong!'),
+                  ));
+                }
+                // productItem.toogleFavStatus();
               },
             ),
             // child: Text('Never changes!'),

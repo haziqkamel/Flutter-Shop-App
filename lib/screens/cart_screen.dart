@@ -43,21 +43,7 @@ class CartScreen extends StatelessWidget {
                     ),
                     backgroundColor: Theme.of(context).primaryColor,
                   ),
-                  TextButton(
-                    onPressed: () {
-                      Provider.of<Orders>(context, listen: false).addOrder(
-                        cartItem.items.values.toList(),
-                        cartItem.totalAmount,
-                      );
-                      cartItem.clear();
-                    },
-                    child: Text('Order Now'),
-                    style: ButtonStyle(
-                      foregroundColor: MaterialStateProperty.all(
-                        Colors.amber,
-                      ),
-                    ),
-                  ),
+                  OrderButton(cartItem: cartItem),
                 ],
               ),
             ),
@@ -78,6 +64,48 @@ class CartScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class OrderButton extends StatefulWidget {
+  const OrderButton({
+    Key key,
+    @required this.cartItem,
+  }) : super(key: key);
+
+  final Cart cartItem;
+
+  @override
+  _OrderButtonState createState() => _OrderButtonState();
+}
+
+class _OrderButtonState extends State<OrderButton> {
+  var _isLoading = false;
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: (widget.cartItem.totalAmount <= 0 || _isLoading)
+          ? null
+          : () async {
+              setState(() {
+                _isLoading = true;
+              });
+              await Provider.of<Orders>(context, listen: false).addOrder(
+                widget.cartItem.items.values.toList(),
+                widget.cartItem.totalAmount,
+              );
+              setState(() {
+                _isLoading = false;
+              });
+              widget.cartItem.clear();
+            },
+      child: _isLoading ? CircularProgressIndicator() : Text('Order Now'),
+      style: ButtonStyle(
+        foregroundColor: MaterialStateProperty.all(
+          Colors.amber,
+        ),
       ),
     );
   }
