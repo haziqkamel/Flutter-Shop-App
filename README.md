@@ -1,4 +1,4 @@
-# flutter_shop_app (WIP)
+# Flutter Shop App (WIP)
 
 - Implementing local persistence data storage
 - Networking http/https request

@@ -42,6 +42,14 @@ class ProductsProvider with ChangeNotifier {
 
   // var _showFavoritesOnly = false;
 
+  //Token for authentication
+  final String authToken;
+
+  // set authToken(String value) {
+  //   _authToken = value;
+  // }
+  ProductsProvider(this.authToken, this._items);
+
   List<Product> get items {
     // if (_showFavoritesOnly) {
     //   return _items.where((prodItem) => prodItem.isFavorite).toList();
@@ -70,7 +78,9 @@ class ProductsProvider with ChangeNotifier {
   Future<void> fetchAndSetProducts() async {
     final urlProducts = Uri.https(
         'flutter-shop-app-9dd56-default-rtdb.asia-southeast1.firebasedatabase.app',
-        '/products.json');
+        '/products.json', {
+      'auth': '$authToken'
+    }); //have to return as map. Read more from http package
     try {
       final response = await http.get(urlProducts);
       // print(json.decode(response.body));
