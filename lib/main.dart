@@ -8,6 +8,7 @@ import 'package:flutter_shop_app/screens/cart_screen.dart';
 import 'package:flutter_shop_app/screens/edit_product_screen.dart';
 import 'package:flutter_shop_app/screens/orders_screen.dart';
 import 'package:flutter_shop_app/screens/products_overview_screen.dart';
+import 'package:flutter_shop_app/screens/splash_screen.dart';
 import 'package:flutter_shop_app/screens/user_products_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_shop_app/screens/product_detail_screen.dart';
@@ -25,9 +26,10 @@ class MyApp extends StatelessWidget {
           create: (ctx) => Auth(),
         ),
         ChangeNotifierProxyProvider<Auth, ProductsProvider>(
-          create: (ctx) => ProductsProvider('', []),
+          create: (ctx) => ProductsProvider('', '', []),
           update: (ctx, auth, previousState) => ProductsProvider(
             auth.token,
+            auth.userId,
             previousState.items == null ? [] : previousState.items,
           ),
           // previousState..authToken = auth.token,
@@ -35,8 +37,13 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (ctx) => Cart(),
         ),
-        ChangeNotifierProvider(
-          create: (ctx) => Orders(),
+        ChangeNotifierProxyProvider<Auth, Orders>(
+          create: (ctx) => Orders('', '', []),
+          update: (ctx, auth, previousState) => Orders(
+            auth.token,
+            auth.userId,
+            previousState == null ? [] : previousState.orders,
+          ),
         ),
       ],
       child: Consumer<Auth>(
@@ -48,7 +55,19 @@ class MyApp extends StatelessWidget {
             accentColor: Colors.amberAccent,
             fontFamily: 'Lato',
           ),
-          home: auth.isAuth ? ProductsOverviewScreen() : AuthScreen(),
+          home: auth.isAuth //true?
+              ? ProductsOverviewScreen() //Go
+              : FutureBuilder(
+                  //else
+                  future: auth.tryAutoLogin(), //try autoLogin
+                  builder: (ctx, authResultSnapshot) =>
+                      authResultSnapshot.connectionState ==
+                              ConnectionState.waiting //autoLogin state waiting?
+                          ? SplashScreen() //show splash screen
+                          : auth.isAuth //else isAuth true?
+                              ? ProductsOverviewScreen() //show
+                              : AuthScreen(), //else login
+                ),
           routes: {
             ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
             CartScreen.routeName: (ctx) => CartScreen(),

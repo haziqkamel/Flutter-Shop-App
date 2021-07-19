@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_shop_app/models/product.dart';
+import 'package:flutter_shop_app/providers/auth.dart';
 import 'package:flutter_shop_app/providers/cart.dart';
 import 'package:flutter_shop_app/screens/product_detail_screen.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +16,7 @@ class ProductItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final productItem = Provider.of<Product>(context, listen: false);
     final cartItem = Provider.of<Cart>(context, listen: false);
+    final authData = Provider.of<Auth>(context, listen: false);
     final scaffold = Scaffold.of(context);
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
@@ -42,7 +44,7 @@ class ProductItem extends StatelessWidget {
               onPressed: () async {
                 try {
                   await Provider.of<Product>(context, listen: false)
-                      .toogleFavStatus();
+                      .toogleFavStatus(authData.token, authData.userId);
                 } catch (error) {
                   scaffold.showSnackBar(SnackBar(
                     content:

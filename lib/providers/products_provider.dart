@@ -44,11 +44,16 @@ class ProductsProvider with ChangeNotifier {
 
   //Token for authentication
   final String authToken;
+  final String userId;
 
   // set authToken(String value) {
   //   _authToken = value;
   // }
-  ProductsProvider(this.authToken, this._items);
+  ProductsProvider(
+    this.authToken,
+    this.userId,
+    this._items,
+  );
 
   List<Product> get items {
     // if (_showFavoritesOnly) {
@@ -75,12 +80,24 @@ class ProductsProvider with ChangeNotifier {
   //   notifyListeners();
   // }
 
-  Future<void> fetchAndSetProducts() async {
-    final urlProducts = Uri.https(
+  Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
+    var _params;
+    if (filterByUser) {
+      _params = <String, String>{
+        'auth': authToken,
+        'orderBy': json.encode("creatorId"),
+        'equalTo': json.encode(userId),
+      };
+    }
+    if (filterByUser == false) {
+      _params = <String, String>{
+        'auth': authToken,
+      };
+    }
+    var urlProducts = Uri.https(
         'flutter-shop-app-9dd56-default-rtdb.asia-southeast1.firebasedatabase.app',
-        '/products.json', {
-      'auth': '$authToken'
-    }); //have to return as map. Read more from http package
+        '/products.json',
+        _params); //have to return as map. Read more from http package
     try {
       final response = await http.get(urlProducts);
       // print(json.decode(response.body));
@@ -88,15 +105,27 @@ class ProductsProvider with ChangeNotifier {
       if (extractedData == null) {
         return;
       }
+      urlProducts = Uri.https(
+          'flutter-shop-app-9dd56-default-rtdb.asia-southeast1.firebasedatabase.app',
+          '/userFavorites/$userId.json', {
+        'auth': '$authToken',
+      });
+      final favoriteResponse = await http.get(urlProducts);
+      print(json.decode(favoriteResponse.body));
+      final favoriteData = json.decode(favoriteResponse.body);
       final List<Product> loadedProducts = [];
-      extractedData.forEach((id, data) {
+      extractedData.forEach((prodId, data) {
         loadedProducts.add(
           Product(
-            id: id,
+            id: prodId,
             title: data['title'],
             description: data['description'],
             price: data['price'],
-            isFavorite: data['isFavorite'],
+            isFavorite: favoriteData == null
+                ? false
+                : favoriteData[prodId] == null
+                    ? false
+                    : favoriteData[prodId]['isFavorite'],
             imageUrl: data['imageUrl'],
           ),
         );
@@ -111,7 +140,9 @@ class ProductsProvider with ChangeNotifier {
   Future<void> addProduct(Product product) async {
     final urlProducts = Uri.https(
         'flutter-shop-app-9dd56-default-rtdb.asia-southeast1.firebasedatabase.app',
-        '/products.json');
+        '/products.json', {
+      'auth': '$authToken',
+    });
     try {
       final response = await http.post(
         urlProducts,
@@ -121,7 +152,8 @@ class ProductsProvider with ChangeNotifier {
             'description': product.description,
             'imageUrl': product.imageUrl,
             'price': product.price,
-            'isFavorite': product.isFavorite,
+            'creatorId': userId,
+            // 'isFavorite': product.isFavorite,
           },
         ),
       );
@@ -144,7 +176,9 @@ class ProductsProvider with ChangeNotifier {
     if (prodIndex >= 0) {
       final urlProducts = Uri.https(
           'flutter-shop-app-9dd56-default-rtdb.asia-southeast1.firebasedatabase.app',
-          '/products/$id.json');
+          '/products/$id.json', {
+        'auth': '$authToken',
+      });
       await http.patch(
         urlProducts,
         body: json.encode({
@@ -164,7 +198,9 @@ class ProductsProvider with ChangeNotifier {
   Future<void> deleteProduct(String id) async {
     final urlProducts = Uri.https(
         'flutter-shop-app-9dd56-default-rtdb.asia-southeast1.firebasedatabase.app',
-        '/products/$id.json');
+        '/products/$id.json', {
+      'auth': '$authToken',
+    });
     final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
     var existingProduct = _items[existingProductIndex];
     // _items.removeWhere((prod) => prod.id == id);
