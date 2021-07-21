@@ -30,6 +30,7 @@ class ProductDetailScreen extends StatelessWidget {
               title: Text(
                 loadedProduct.title,
               ),
+              // centerTitle: true,
               background: Hero(
                 tag: loadedProduct.id,
                 child: Image.network(
